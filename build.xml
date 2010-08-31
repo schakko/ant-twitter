@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ant-twitter" default="make_all">
+	<description>ant-twitter</description>
+	<loadfile property="artifact.version" srcfile="VERSION" />
+	<tstamp>
+		<format property="artifact.build" locale="de" pattern="yyyyMMdd_HHmm" />
+	</tstamp>
+
+	<property file="build.properties" />
+	<property name="artifact.label" value="${artifact.build}-${artifact.version}" />
+
+	<exec executable="hostname" outputproperty="host.name" />
+
+	<property file="build-${host.name}.properties" />
+
+	<target name="clean">
+		<delete dir="${dir.build.base}" />
+	</target>
+
+	<target name="init" depends="clean">
+		<mkdir dir="${dir.build.base}" />
+		<touch file="${build.log.file}" />
+		<property name="build.log.file.abs" location="${build.log.file}" />
+		<record name="${build.log.file.abs}" loglevel="verbose" />
+		<mkdir dir="${dir.build.src}" />
+		<mkdir dir="${dir.build.classes}" />
+		<mkdir dir="${dir.build.dist}" />
+		<copy todir="${dir.build.src}" overwrite="true">
+			<fileset dir="${dir.src}">
+				<include name="**/*" />
+			</fileset>
+			<filterset>
+				<filter token="VERSION" value="${artifact.version}" />
+				<filter token="BUILDER" value="${user.name}" />
+				<filter token="BUILD_DATE" value="${artifact.build}" />
+				<filter token="REVISION" value="${artifact.revision}" />
+			</filterset>
+		</copy>
+	</target>
+
+	<path id="project.class.path">
+		<fileset dir="${dir.lib}">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement path="${dir.build.src}" />
+	</path>
+
+	<target name="label">
+		<echo file="${artifact.label.file}" message="${artifact.label}" />
+		<echo file="${artifact.revision.file}" message="${svnrevision}" />
+	</target>
+
+	<target name="compile" depends="init,label">
+		<echo message="${dir.build.src} - ${dir.build.classes}" />
+		<javac srcdir="${dir.build.src}" destdir="${dir.build.classes}" debug="on">
+			<classpath refid="project.class.path" />
+		</javac>
+
+		<jar destfile="${dir.build.dist}\${artifact.name}.jar" basedir="${dir.build.classes}">
+			<manifest>
+				<attribute name="Built-By" value="EDV Consulting Wohlers GmbH - ${user.name}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="make_jar" depends="compile">
+		<property name="build.artifact.file" location="${dir.build.dist}/${artifact.name}-${artifact.version}.jar" />
+		<mkdir dir="${dir.build.dist}" />
+
+		<jar destfile="${build.artifact.file}" basedir="${dir.build.classes}" />
+	</target>
+
+	<target name="make_src" depends="init">
+		<property name="build.artifact.file.src" location="${dir.build.dist}/${artifact.name}-${artifact.version}-src.zip" />
+		<zip destfile="${build.artifact.file.src}" basedir="${dir.build.src}" />
+	</target>
+
+	<target name="make_doc">
+		<property name="build.artifact.file.doc" location="${dir.build.dist}/${artifact.name}-${artifact.version}-doc.zip" />
+		<javadoc2 sourcepath="${dir.build.src}" destdir="${dir.build.javadoc}" windowtitle="${artifact.name}" author="true" version="true">
+			<link href="http://wap.ecw.de" />
+			<link href="http://www.ecw.de" />
+		</javadoc2>
+		
+		<zip destfile="${build.artifact.file.doc}" basedir="${dir.build.javadoc}">
+		</zip>
+	</target>
+
+	<target name="make_production" depends="make_jar, make_doc, make_src">
+		<zip destfile="${dir.build.dist}/${artifact.name}-${artifact.version}.zip">
+			<zipfileset file="${build.artifact.file}" />
+			<zipfileset file="${build.artifact.file.src}" />
+			<zipfileset file="${build.artifact.file.doc}" />
+			<zipfileset file="${dir.doc}/customer/README.txt" />
+		</zip>
+	</target>
+
+	<target name="make_all" depends="make_production">
+	</target>
+</project>

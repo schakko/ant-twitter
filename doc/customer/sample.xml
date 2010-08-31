@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<project name="TwitterTestTask" default="main" basedir=".">
+  <taskdef name="twitter" classname="de.ecw.ant.twitter.AntTwitterTask"/>
+  <target name="main">
+    <twitter message="Hello World from Ant!" username="your-twitter-username" password="your-twitter-password" bitlyUsername="your-bitly-username" bitlyApiKey="your-bitly-api-key" enableBitly="false" />
+  </target>
+</project>
