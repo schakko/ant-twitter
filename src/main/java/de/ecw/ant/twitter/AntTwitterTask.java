@@ -12,7 +12,9 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 
 import twitter4j.Twitter;
+import twitter4j.TwitterFactory;
 import twitter4j.TwitterException;
+import twitter4j.conf.ConfigurationBuilder;
 
 import com.rosaloves.net.shorturl.bitly.Bitly;
 import com.rosaloves.net.shorturl.bitly.BitlyFactory;
@@ -86,15 +88,25 @@ public class AntTwitterTask extends Task
     private String enableBitly = FALSE;
 
     /**
-     * Username for Twitter
+     * Consumer Key for Twitter
      */
-    private String username;
+    private String consumerKey;
 
     /**
-     * Password for Twitter
+     * Consumer Secret for Twitter
      */
-    private String password;
+    private String consumerSecret;
 
+    /**
+     * accessToken for Twitter
+     */
+    private String accessToken;
+    
+    /**
+     * accessToken secret for Twitter
+     */
+    private String accessTokenSecret;
+    
     /**
      * Agent name from which the message is sent
      */
@@ -106,43 +118,82 @@ public class AntTwitterTask extends Task
     private String message;
 
     /**
-     * Get Twitter screenname
+     * Get Twitter consumer key
      * 
      * @return
      */
-    public String getUsername()
+    public String getConsumerKey()
     {
-        return username;
+        return consumerKey;
     }
 
     /**
-     * Set Twitter screenname
+     * Set Twitter consumer key
      * 
-     * @param username
+     * @param key
      */
-    public void setUsername(String username)
+    public void setConsumerKey(String key)
     {
-        this.username = username;
+        this.consumerKey = key;
     }
 
     /**
-     * Get Twitter password
+     * Get Twitter consumer secret
      * 
      * @return
      */
-    public String getPassword()
+    public String getConsumerSecret()
     {
-        return password;
+        return consumerSecret;
     }
 
     /**
-     * Set Twitter password
+     * Set Twitter consumer secret
      * 
-     * @param password
+     * @param secret
      */
-    public void setPassword(String password)
+    public void setConsumerSecret(String secret)
     {
-        this.password = password;
+        this.consumerSecret = secret;
+    }
+    /**
+     * Get Twitter access token
+     * 
+     * @return
+     */
+    public String getAccessToken()
+    {
+    	return accessToken;
+    }
+    
+    /**
+     * Set Twitter accesstoken
+     * 
+     * @param key
+     */
+    public void setAccessToken(String token)
+    {
+    	this.accessToken = token;
+    }
+    
+    /**
+     * Get Twitter access token secret
+     * 
+     * @return
+     */
+    public String getAccessTokenSecret()
+    {
+    	return accessTokenSecret;
+    }
+    
+    /**
+     * Set Twitter consumer secret
+     * 
+     * @param secret
+     */
+    public void setAccessTokenSecret(String secret)
+    {
+    	this.accessTokenSecret = secret;
     }
 
     /**
@@ -258,10 +309,10 @@ public class AntTwitterTask extends Task
         String useMessage = getMessage();
 
         // validate Twitter parameters
-        if ((getUsername() == null)
-                        || ((getUsername() != null) && (getUsername().length() == 0))
-                        || (getPassword() == null)
-                        || ((getPassword() != null) && (getPassword().length() == 0)))
+        if ((getConsumerKey() == null)
+                        || ((getConsumerKey() != null) && (getConsumerKey().length() == 0))
+                        || (getConsumerSecret() == null)
+                        || ((getConsumerSecret() != null) && (getConsumerSecret().length() == 0)))
         {
             log(
                             "You have to enter a valid Twitter username/password combination, missing arguments!",
@@ -292,9 +343,15 @@ public class AntTwitterTask extends Task
         }
 
         // new Twitter client
-        Twitter twitter = new Twitter(getUsername(), getPassword());
-        twitter.setSource(getAgentName());
-
+        ConfigurationBuilder cb = new ConfigurationBuilder();
+        cb.setDebugEnabled(true)
+          .setOAuthConsumerKey(getConsumerKey())
+          .setOAuthConsumerSecret(getConsumerSecret())
+          .setOAuthAccessToken(getAccessToken())
+          .setOAuthAccessTokenSecret(getAccessTokenSecret());
+        TwitterFactory tf = new TwitterFactory(cb.build());
+        Twitter twitter = tf.getInstance();
+        
         // assume that all messages are longer than 140 chars
         List<String> messages = AntTwitterTask.splitMessage(useMessage);
 
